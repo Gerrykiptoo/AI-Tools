@@ -1,0 +1,143 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1c5cad09",
+   "metadata": {
+    "vscode": {
+     "languageId": "plaintext"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import spacy\n",
+    "from spacy import displacy\n",
+    "from spacytextblob.spacytextblob import SpacyTextBlob\n",
+    "\n",
+    "# Load spaCy model\n",
+    "nlp = spacy.load(\"en_core_web_sm\")\n",
+    "nlp.add_pipe('spacytextblob')  # Add sentiment analysis\n",
+    "\n",
+    "# Process a sample review\n",
+    "sample_review = df.iloc[0][\"Text\"]\n",
+    "doc = nlp(sample_review)\n",
+    "\n",
+    "# 1. Named Entity Recognition (NER)\n",
+    "print(\"--- Named Entities (Products/Brands) ---\")\n",
+    "for ent in doc.ents:\n",
+    "    if ent.label_ in [\"ORG\", \"PRODUCT\"]:  # Focus on brands/products\n",
+    "        print(f\"{ent.text} ({ent.label_})\")\n",
+    "\n",
+    "# 2. Sentiment Analysis\n",
+    "print(\"\\n--- Sentiment Analysis ---\")\n",
+    "print(f\"Review Text: {sample_review}\")\n",
+    "print(f\"Polarity: {doc._.polarity:.2f} (-1 to +1)\")\n",
+    "print(f\"Sentiment: {'Positive' if doc._.polarity > 0 else 'Negative'}\")\n",
+    "\n",
+    "# 3. Visualize NER\n",
+    "displacy.render(doc, style=\"ent\", jupyter=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6f6f09a6-98e7-4e27-bed3-6a6a7e7cbc77",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Add custom sentiment rules\n",
+    "def custom_sentiment(doc):\n",
+    "    if \"bitter\" in doc.text.lower():\n",
+    "        doc._.polarity -= 0.3  # Adjust sentiment score\n",
+    "    return doc\n",
+    "\n",
+    "nlp.add_pipe(custom_sentiment, last=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b19424d1-703b-4802-8580-73c810139d1c",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e3d540d7-9b5b-4a9c-a76c-4ba559926a20",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import spacy\n",
+    "from spacytextblob.spacytextblob import SpacyTextBlob\n",
+    "from spacy.language import Language\n",
+    "\n",
+    "# 1. Initialize pipeline\n",
+    "nlp = spacy.load(\"en_core_web_sm\")\n",
+    "\n",
+    "# 2. Add the sentiment analysis component (must be registered first)\n",
+    "nlp.add_pipe(\"spacytextblob\")\n",
+    "\n",
+    "# 3. Define and register custom component properly\n",
+    "@Language.component(\"amazon_sentiment\")\n",
+    "def amazon_sentiment(doc):\n",
+    "    \"\"\"Custom sentiment analyzer for Amazon reviews\"\"\"\n",
+    "    # Amplify negative words common in reviews\n",
+    "    negative_boost = [\"bitter\", \"awful\", \"terrible\", \"horrible\", \"worst\"]\n",
+    "    for token in doc:\n",
+    "        if token.text.lower() in negative_boost:\n",
+    "            doc._.polarity -= 0.2\n",
+    "    return doc\n",
+    "\n",
+    "# 4. Add the custom component to pipeline\n",
+    "nlp.add_pipe(\"amazon_sentiment\", last=True)\n",
+    "\n",
+    "# 5. Process a sample review\n",
+    "review = \"The coffee tasted bitter and awful, worst purchase ever!\"\n",
+    "doc = nlp(review)\n",
+    "\n",
+    "# Print results\n",
+    "print(\"Text:\", review)\n",
+    "print(\"Entities:\")\n",
+    "for ent in doc.ents:\n",
+    "    if ent.label_ in [\"ORG\", \"PRODUCT\"]:\n",
+    "        print(f\"  - {ent.text} ({ent.label_})\")\n",
+    "print(\"\\nSentiment Analysis:\")\n",
+    "print(f\"Polarity: {doc._.polarity:.2f} (-1 to +1)\")\n",
+    "print(f\"Subjectivity: {doc._.subjectivity:.2f} (0 to 1)\")\n",
+    "print(\"Verdict:\", \"Positive\" if doc._.polarity > 0 else \"Negative\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6de205e3-c67c-4ffe-a535-ecbb5dda41af",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
